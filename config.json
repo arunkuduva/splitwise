@@ -1,0 +1,10 @@
+{
+
+    "address" : "0x15e6087A233eF02EF667b9B535Ff87e14Ee05145",
+    "key" : "11F4852D1EEE9332991C67EAB61FC1744EA95CA703B5DBAA97FD63F5A225CB0D",
+    "contract" : "0x2d565E2b684697C58AA38FA63E7c2E408F590289",
+    "network":"https://ropsten.infura.io/",
+    "gaslimit":"800000",
+    "gasprice":"20000000000",
+    "contractaddress":"0x4ebfC0Ce7b1f4faC79aA792a03aF6E8CE36B00c5"
+}
