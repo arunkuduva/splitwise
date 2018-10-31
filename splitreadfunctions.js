@@ -1,12 +1,12 @@
 var Web3 = require('web3');
 var utils = require('C:/Users/Raaghav/Testing/node_modules/web3/lib/utils/utils');
-
-var web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/'));
+var config = require('./config.json');
+var web3 = new Web3(new Web3.providers.HttpProvider(config.network));
 
 var interface = require('./interface');
 
-var contractAddress = '0x4ebfC0Ce7b1f4faC79aA792a03aF6E8CE36B00c5';
-var fromaddress = '0x15e6087A233eF02EF667b9B535Ff87e14Ee05145';
+var contractAddress = config.contractaddress;
+var fromaddress = config.address;
 
 
 const splitWise = web3.eth.contract(interface.interface);

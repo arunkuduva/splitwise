@@ -7,6 +7,7 @@ var txutils = lightwallet.txutils;
 
 var web3 = new Web3(new Web3.providers.HttpProvider(config.network));
 var interface = require('./interface');
+var rawTx ;
 
 //var web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 
@@ -23,10 +24,9 @@ var txOptions = {
 	value: web3.toHex(web3.toWei(.0001, 'ether'))
 };
 
-var rawTx = txutils.functionTx(interface.interface, 'addfund',[ '0x15e6087A233eF02EF667b9B535Ff87e14Ee05145',10000], txOptions);
-
-function sendRaw(rawTx) {
+function sendRaw(address,amount) {
     var privateKey = new Buffer(key, 'hex');
+    rawTx = txutils.functionTx(interface.interface, 'addfund',[ address,amount], txOptions);
     var transaction = new tx(rawTx);
     transaction.sign(privateKey);
     var serializedTx = transaction.serialize().toString('hex');
@@ -40,4 +40,6 @@ function sendRaw(rawTx) {
     });
 }
 
-sendRaw(rawTx);
+//sendRaw(rawTx);
+
+module.exports = {sendRaw};
