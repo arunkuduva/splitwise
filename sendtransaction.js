@@ -24,7 +24,7 @@ var txOptions = {
 	value: web3.toHex(web3.toWei(.0001, 'ether'))
 };
 
-function sendRaw(address,amount) {
+function sendRaw(address,amount , callback) {
     var privateKey = new Buffer(key, 'hex');
     rawTx = txutils.functionTx(interface.interface, 'addfund',[ address,amount], txOptions);
     var transaction = new tx(rawTx);
@@ -34,8 +34,10 @@ function sendRaw(address,amount) {
     '0x' + serializedTx, function(err, result) {
         if(err) {
             console.log('error is' + err);
+            callback(err);
         } else {
             console.log('result is ' + result);
+            callback(undefined, result);
         }
     });
 }

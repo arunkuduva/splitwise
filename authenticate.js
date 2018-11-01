@@ -1,19 +1,18 @@
-var {User} = require('./../models/user');
+
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 var authenticate = (req, res, next) => {
-  var token = req.header('x-auth');
+  try {
 
-  User.findByToken(token).then((user) => {
-    if (!user) {
-      return Promise.reject();
-    }
-
-    req.user = user;
-    req.token = token;
-    next();
-  }).catch((e) => {
-    res.status(401).send();
-  });
+    decoded = jwt.verify(req.session.token, 'sun2moon');
+  } 
+  catch(e){
+    console.log('error in verifying u , signin again' + JSON.stringify(e));
+    res.redirect('/signin');
+  }
+  console.log('inside authenticate ' + JSON.stringify(decoded));
+  next();
 };
 
 module.exports = {authenticate};

@@ -1,21 +1,22 @@
+
+const database = require('./databaseconnect');
+const databaseoperations = require('./databaseoperations');
+const sendtransaction = require('./sendtransaction');
+const authenticate = require('./authenticate').authenticate;
+const verifyuser = require('./verifyuser');
+
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 const JSON = require('circular-json');
-const database = require('./databaseconnect');
-const databaseoperations = require('./databaseoperations');
-const sendtransaction = require('./sendtransaction');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const verifyuser = require('./verifyuser');
 var path = require('path');
 var session = require('express-session');
 var cookieParser = require('cookie-parser');
 // const hbs = require('hbs');
 
 // app.set('view engine', 'hbs');
-
-
 var app = express();
 
 app.use(bodyParser.json());
@@ -31,11 +32,7 @@ app.use(session({
   }
 }));
 
-var authenticate = (req, res, next) => {
-  decoded = jwt.verify(req.session.token, 'sun2moon');
-  console.log('inside authenticate ' + JSON.stringify(decoded));
-  next();
-};
+
 
 app.get('/signup',(req,resp,next)=> {
 
@@ -46,18 +43,10 @@ app.get('/signup',(req,resp,next)=> {
 app.post('/signup',(req,resp,next)=> {
 
   var hashedpassword;
-  // console.log(JSON.stringify(req.method));
-  // console.log(JSON.stringify(req.body));
-  // console.log(JSON.stringify(req.query));
-  // console.log(JSON.stringify(req.params));
-  //resp.sendfile('index.html');
-  //console.log( 'verify user is ' + verifyuser.verifyuserexists(database.con, req.body.emailaddress));
-  
-  
   req.session.user = req.body.username;
   console.log('session user in post signup ' + req.session.user);
 
-   if ( verifyuser.verifyuserexists(database.con, req.body.emailaddress, (err, result) => {
+   if ( databaseoperations.verifyuserexists(database.con, req.body.emailaddress, (err, result) => {
 
     if (err){
       console.log('error in database operation from midleware');
@@ -81,7 +70,7 @@ app.post('/signup',(req,resp,next)=> {
       } else {
         hashedpassword = hash;
         console.log('hashed password ' + hashedpassword);
-        databaseoperations.insert({
+        databaseoperations.insertuser({
           con: database.con,
           tablename: 'Users',
           values : {
@@ -121,16 +110,19 @@ app.get('/signin',(req,resp,next)=> {
 
 app.post('/signin', (req,resp,next)=> {
 
-  verifyuser.verifyuserexists(database.con, req.body.emailaddress, (err, result) => {
+  console.log(JSON.stringify(req.body));
+ 
+  databaseoperations.verifyuserexists(database.con, req.body.emailaddress, (err, result) => {
 
     if (err){
       console.log('error in database operation from midleware');
       } 
       else 
-      {      
+      {    
+        if(result)  {
       console.log(' does the user exist  ' + JSON.stringify(result ));
 
-      verifyuser.hashedpassword(database.con, req.body.emailaddress, (err, result) => {
+      databaseoperations.hashedpassword(database.con, req.body.emailaddress, (err, result) => {
 
         if ( result && bcrypt.compareSync(req.body.password , result)) {
            // update session
@@ -139,6 +131,7 @@ app.post('/signin', (req,resp,next)=> {
            salt = 'sun2moon';
            var token = jwt.sign({emailaddress: req.body.emailaddress, access } , salt).toString();
            req.session.token = token;
+           req.session.user = req.body.emailaddress;
            console.log('token from req session object' + JSON.stringify(req.session));
            //resp.sendfile(__dirname + '/publichtml/splitwise.html');
            resp.redirect('/splitwise');
@@ -148,7 +141,13 @@ app.post('/signin', (req,resp,next)=> {
         }
       });
     }
-   });  
+      else {
+        console.log('user does not exist ');
+        resp.redirect('/signup');
+      }
+    }
+   })
+  ;  
 });
 
 app.get('/splitwise', authenticate, (req,resp,next)=> {
@@ -160,157 +159,57 @@ app.get('/splitwise', authenticate, (req,resp,next)=> {
 
 app.post('/splitwise', authenticate , (req,resp,next)=> {
 
+  
+  
+  if(req.body.fundsplitwisename === 'signout'){
+    resp.redirect('/signin');
+   
+    req.session.destroy(function(err) {
+      if(err) {
+          console.log('7 request session object after destroy err ' + req.session);
+        return next(err);
+      } else {
+          console.log('7 request session object after destroy ' + req.session);
+       // return resp.redirect('/signin');
+      }
+    });
+  } else{
+
   resp.sendFile(__dirname + '/publichtml/splitwise.html');
+
+  var  inserttxobject = {
+      con: database.con,
+      tablename : 'transaction_log',
+      values : {
+          name: req.session.user,
+          contractaddress: req.body.publicaddressname,
+          amount:req.body.amountname
+      }
+    };
+    console.log('stringify insert obhect ' + JSON.stringify(inserttxobject));
   
 
-  var sql = `INSERT INTO transaction_log VALUES ('${req.body.publicaddressname}', '0x2d565E2b684697C58AA38FA63E7c2E408F590289',${req.body.amountname})`;
-  database.con.query(sql, function (err, result) {
-      if (err) throw err;
-      console.log("1 record inserted");
-    });
+  sendtransaction.sendRaw(req.body.publicaddressname,req.body.amountname , (err, result)=>{
 
-  sendtransaction.sendRaw(req.body.publicaddressname,req.body.amountname);
-
+    if (err) {
+      console.log("send transaction failed in block chain "+ JSON.stringify(err));
+    } else{
+      console.log("send transaction succeded in blockchain "+ JSON.stringify(result));
+      databaseoperations.inserttransactionlog(inserttxobject, (err, result)=>
+      {
+        if (err) {
+          console.log("error in insert transaction "+ JSON.stringify(err));
+        } else{
+          console.log("1 insert transaction "+ JSON.stringify(result));
+        }
+        
+      });
+    }
+  });
+  }
 });
 
 app.listen(3000, () => {
   console.log(`Started app at port 3000`);
 });
 
-
-
-
-// app.post('/todos', authenticate, (req, res) => {
-//   var todo = new Todo({
-//     text: req.body.text,
-//     _creator: req.user._id
-//   });
-
-//   todo.save().then((doc) => {
-//     res.send(doc);
-//   }, (e) => {
-//     res.status(400).send(e);
-//   });
-// });
-
-// app.get('/todos', authenticate, (req, res) => {
-//   Todo.find({
-//     _creator: req.user._id
-//   }).then((todos) => {
-//     res.send({todos});
-//   }, (e) => {
-//     res.status(400).send(e);
-//   });
-// });
-
-// app.get('/todos/:id', authenticate, (req, res) => {
-//   var id = req.params.id;
-
-//   if (!ObjectID.isValid(id)) {
-//     return res.status(404).send();
-//   }
-
-//   Todo.findOne({
-//     _id: id,
-//     _creator: req.user._id
-//   }).then((todo) => {
-//     if (!todo) {
-//       return res.status(404).send();
-//     }
-
-//     res.send({todo});
-//   }).catch((e) => {
-//     res.status(400).send();
-//   });
-// });
-
-// app.delete('/todos/:id', authenticate, (req, res) => {
-//   var id = req.params.id;
-
-//   if (!ObjectID.isValid(id)) {
-//     return res.status(404).send();
-//   }
-
-//   Todo.findOneAndRemove({
-//     _id: id,
-//     _creator: req.user._id
-//   }).then((todo) => {
-//     if (!todo) {
-//       return res.status(404).send();
-//     }
-
-//     res.send({todo});
-//   }).catch((e) => {
-//     res.status(400).send();
-//   });
-// });
-
-// app.patch('/todos/:id', authenticate, (req, res) => {
-//   var id = req.params.id;
-//   var body = _.pick(req.body, ['text', 'completed']);
-
-//   if (!ObjectID.isValid(id)) {
-//     return res.status(404).send();
-//   }
-
-//   if (_.isBoolean(body.completed) && body.completed) {
-//     body.completedAt = new Date().getTime();
-//   } else {
-//     body.completed = false;
-//     body.completedAt = null;
-//   }
-
-//   Todo.findOneAndUpdate({_id: id, _creator: req.user._id}, {$set: body}, {new: true}).then((todo) => {
-//     if (!todo) {
-//       return res.status(404).send();
-//     }
-
-//     res.send({todo});
-//   }).catch((e) => {
-//     res.status(400).send();
-//   })
-// });
-
-// // POST /users
-// app.post('/users', (req, res) => {
-//   var body = _.pick(req.body, ['email', 'password']);
-//   var user = new User(body);
-
-//   user.save().then(() => {
-//     return user.generateAuthToken();
-//   }).then((token) => {
-//     res.header('x-auth', token).send(user);
-//   }).catch((e) => {
-//     res.status(400).send(e);
-//   })
-// });
-
-// app.get('/users/me', authenticate, (req, res) => {
-//   res.send(req.user);
-// });
-
-// app.post('/users/login', (req, res) => {
-//   var body = _.pick(req.body, ['email', 'password']);
-
-//   User.findByCredentials(body.email, body.password).then((user) => {
-//     return user.generateAuthToken().then((token) => {
-//       res.header('x-auth', token).send(user);
-//     });
-//   }).catch((e) => {
-//     res.status(400).send();
-//   });
-// });
-
-// app.delete('/users/me/token', authenticate, (req, res) => {
-//   req.user.removeToken(req.token).then(() => {
-//     res.status(200).send();
-//   }, () => {
-//     res.status(400).send();
-//   });
-// });
-
-// app.listen(port, () => {
-//   console.log(`Started up at port ${port}`);
-// });
-
-// module.exports = {app};
