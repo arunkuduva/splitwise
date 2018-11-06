@@ -4,6 +4,7 @@ const databaseoperations = require('./databaseoperations');
 const sendtransaction = require('./sendtransaction');
 const authenticate = require('./authenticate').authenticate;
 const verifyuser = require('./verifyuser');
+const populateviewobject = require('./populateviewobject');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -14,10 +15,19 @@ const JSON = require('circular-json');
 var path = require('path');
 var session = require('express-session');
 var cookieParser = require('cookie-parser');
-// const hbs = require('hbs');
+const exphbs = require('express-handlebars');
 
-// app.set('view engine', 'hbs');
+ 
 var app = express();
+//hbs.registerPartials(__dirname + '/views/partials')
+app.engine('handlebars', exphbs({
+  defaultLayout: 'home',
+  partialsDir  : [
+    __dirname + '/views/layouts',
+]
+}));
+app.use(express.static(__dirname + '/views'));
+app.set('view engine', 'handlebars');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
@@ -175,7 +185,7 @@ app.post('/splitwise', authenticate , (req,resp,next)=> {
     });
   } else{
 
-  resp.sendFile(__dirname + '/publichtml/splitwise.html');
+  
 
   var  inserttxobject = {
       con: database.con,
@@ -205,6 +215,15 @@ app.post('/splitwise', authenticate , (req,resp,next)=> {
         
       });
     }
+  });
+  //resp.sendFile(__dirname + '/publichtml/splitwise.html');
+  resp.render('home', {
+
+    contract_balance: populateviewobject.viewobject.contract_balance,
+    did_i_withdraw : populateviewobject.viewobject.did_i_withdraw,
+    am_i_funded: populateviewobject.viewobject.am_i_funded,
+    total_amount_collected: populateviewobject.viewobject.total_amount_collected,
+    number_of_parti : populateviewobject.viewobject.number_of_parti
   });
   }
 });

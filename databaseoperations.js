@@ -7,7 +7,7 @@ var inserttransactionlog = function(inserttxobject , callback){
     inserttxobject.con.query(sql ,function (err, result){
 
         if (err) {
-            console.log('error in database insert of users '+err);
+            console.log('error in database insert of users '+err+ sql);
             callback(err);
         }
         else{

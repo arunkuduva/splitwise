@@ -16,39 +16,62 @@ const contractInstance = splitWise.at(contractAddress);
 //    gasPrice: web3.toHex(20000000000)
 //});
 
+var viewobject = {};
+var contractbalancepromise  = function(){
 
-contractInstance.checkcontractbalance(
- {from: fromaddress}, function(err , result) {
-	 if (err){
-		 console.log(' check contract balance error ' + err);
-	 }else{
-		 
-		 console.log('check contract balance result ' + utils.fromWei(result, 'ether') + ' ethers ');
-	 }
-	 
- });
-
-contractInstance.didIwithdraw(
-	{from: fromaddress}, function(err , result) {
-		if (err){
-			console.log(' didIwithdraw error ' + err);
-		}else{
-			
-			console.log('didIwithdraw result ' +result);
-		}
-		
-	});
-
-contractInstance.amIfunded(
+return new Promise(function(res,rej){
+	contractInstance.checkcontractbalance(
 		{from: fromaddress}, function(err , result) {
 			if (err){
-				console.log(' amI funded error  ' + err);
+				console.log(' check contract balance error ' + err);
+				rej(err);
 			}else{
 				
-				console.log('am I funded ?  ' + result);
+				console.log('check contract balance result ' + utils.fromWei(result, 'ether') + ' ethers ');
+				viewobject.contract_balance = utils.fromWei(result, 'ether');
+				res(viewobject);
 			}
+	   
+			
+	   
 			
 		});
+});
+
+};
+
+var didIwithdrawpromise  = function(){ 
+	return new Promise(function(res,rej){
+		contractInstance.didIwithdraw(
+			{from: fromaddress}, function(err , result) {
+				if (err){
+					console.log(' didIwithdraw error ' + err);
+					rej(err);
+					
+				}else{
+					
+					console.log('didIwithdraw result ' +result);
+					viewobject.did_i_withdraw = result;
+					res(viewobject);
+				}
+				
+			});
+	});
+};
+
+var amifunded = (error, result)=> {contractInstance.amIfunded(
+		{from: fromaddress}, function(err , res) {
+			if (err){
+				console.log(' amI funded error  ' + err);
+				error = err;
+			}else{
+				
+				console.log('am I funded ?  ' + res);
+				viewobject.am_i_funded = res;
+				result = res;
+			}
+			
+		})};
 
  
 
@@ -59,6 +82,7 @@ contractInstance.get_totalamountcol(
 				}else{
 					
 					console.log('get_totalamountcol  ' + utils.fromWei(result, 'ether') + ' ethers ');
+					viewobject.total_amount_collected = utils.fromWei(result, 'ether');
 				}
 				
 			});	
@@ -70,6 +94,12 @@ contractInstance.get_numberofparti(
 		}else{
 			
 			console.log('get_numberofparti  ' + result );
+			viewobject.number_of_parti = result;
+			console.log(viewobject);
 		}
 		
 	});	
+
+	module.exports = {contractbalancepromise,didIwithdrawpromise,amifunded};
+
+	
