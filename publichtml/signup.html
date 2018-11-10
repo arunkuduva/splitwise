@@ -4,44 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Splitwise</title>
+    <title>Splitwise Signup</title>
 
     <link rel="stylesheet" type="text/css" href="main.css">
 
     <!----script src="./node_modules/web3/dist/web3.min.js"></script-->
+	
+
+<script src="./clientsideJS/formvalidation.js"></script>	
+
 
 </head>
 
-<body>
-    <form id = 'signup' action='/signup' method = 'post'>
+<body bgcolor='grey'>
+<h4><u>Signup Form</u></h4>
+    <form id = 'signup' action='/signup' method = 'post' onsubmit='return checkForm(this);'>
         <table>
             <tr>
                 <td>
-                    Enter your name : 
+                    Name: 
                 </td>
                 <td>
-                    <input type = 'text' id = 'userid', name = 'username'> 
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Enter your email address  : 
-                </td>
-                <td>
-                    <input type = 'text' id = 'email_id', name = 'emailaddress'> 
+                    <input type = 'text' id = 'userid', name = 'username'/> 
                 </td>
             </tr>
             <tr>
                 <td>
-                    Enter your password : 
+                    Email Address: 
                 </td>
                 <td>
-                    <input type = 'text' id = 'password', name = 'password'> 
+                    <input type = 'text' id = 'email_id', name = 'emailaddress'/> 
                 </td>
             </tr>
             <tr>
                 <td>
-                    <input type = 'submit' name = 'signup' value = 'signup'/>
+                    Password: 
+                </td>
+                <td>
+                    <input type = 'password' id = 'password', name = 'pwd1'/> 
+                </td>
+            </tr>
+			<tr>
+                <td>
+                    Confirm Password: 
+                </td>
+                <td>
+                    <input type = 'password' id = 'password', name = 'pwd2'/> 
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type = 'submit' name = 'Signup' value = 'signup'/>
+                </td>
+				<td>
+                    <input type = 'reset' name = 'Reset'/>
                 </td>
             </tr>
         </table>

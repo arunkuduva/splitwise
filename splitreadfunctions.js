@@ -31,9 +31,7 @@ return new Promise(function(res,rej){
 				viewobject.contract_balance = utils.fromWei(result, 'ether');
 				res(viewobject);
 			}
-	   
-			
-	   
+
 			
 		});
 });

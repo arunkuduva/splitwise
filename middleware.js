@@ -29,6 +29,8 @@ app.engine('handlebars', exphbs({
 app.use(express.static(__dirname + '/views'));
 app.set('view engine', 'handlebars');
 
+app.use(express.static(path.join(__dirname, 'publichtml')));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 app.use(cookieParser());
@@ -72,11 +74,12 @@ app.post('/signup',(req,resp,next)=> {
    } 
    else {
 
+  //salt = 'sun2moon';
     
   bcrypt.genSalt(10, (err, salt) => {
-    bcrypt.hash(req.body.password, salt, (err, hash) => {
+    bcrypt.hash(req.body.pwd2, salt, (err, hash) => {
       if (err){
-        console.log('error in generating hash');
+        console.log('error in generating hash'+JSON.stringify(err));
       } else {
         hashedpassword = hash;
         console.log('hashed password ' + hashedpassword);
@@ -99,7 +102,13 @@ app.post('/signup',(req,resp,next)=> {
               var token = jwt.sign({emailaddress: req.body.emailaddress, access } , 'sun2moon').toString();
       
              // resp.header('x-auth', token)
-              encodedtoken = encodeURIComponent(token);
+            //encodedtoken = encodeURIComponent(token);
+              
+              access = 'auth' ;
+              salt = 'sun2moon';
+              var token = jwt.sign({emailaddress: req.body.emailaddress, access } , salt).toString();
+              req.session.token = token;
+              req.session.user = req.body.emailaddress;
               resp.sendfile(__dirname + '/publichtml/splitwise.html');
              
           }
@@ -109,6 +118,8 @@ app.post('/signup',(req,resp,next)=> {
     });
   });
    }
+
+
 });
 
 app.get('/signin',(req,resp,next)=> {
