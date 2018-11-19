@@ -20,6 +20,8 @@ var inserttransactionlog = function(inserttxobject , callback){
 }
 
 
+
+
 var insertuser = function(insertobject , callback){
     
     var sql = `insert into ${insertobject.tablename} (name, email, password) 
@@ -80,4 +82,41 @@ var hashedpassword = function(con, emailaddress, callback){
     });
 };
 
-module.exports ={verifyuserexists,hashedpassword,insertuser,inserttransactionlog}; 
+var usertransactionlog = function(con,emailaddress,callback){
+   // emailaddress = 'arun@yahoo.com';
+    sql = `select * from transaction_log where email_address = '${emailaddress}'`;
+    con.query(sql, (err , result) =>{
+        if (err){
+            console.log('error in database operation ');
+            callback("error in database operation " + err);
+        }
+        else{
+        //    console.log('transaction log of user ' + JSON.stringify(result));
+            callback(undefined,result);
+        }
+    });
+}
+
+// var mysql = require('mysql');
+
+// var con = mysql.createConnection({
+//   host: "localhost",
+//   user: "root",
+//   password: "sun2moon",
+//   database: "blockchain",
+//   //insecureAuth : false
+// });
+
+// con.connect(function(err) {
+//   if (err) {
+//     console.log("not Connected!" + err );    
+//   }else {
+//     console.log("DB Connected!");
+//   }
+// });
+
+
+// usertransactionlog(con, 'arun@yahoo.com',(err,result)=>{
+//     console.log(result);
+// });
+module.exports ={verifyuserexists,hashedpassword,insertuser,inserttransactionlog,usertransactionlog}; 

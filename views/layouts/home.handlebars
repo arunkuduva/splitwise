@@ -12,6 +12,24 @@
     <p>Did I fund the contract ? {{  am_i_funded}}</p>
     <p>Total amount collected{{  total_amount_collected}}</p>
     <p>Number of participants{{  number_of_parti}}</p>
+    
+    <P> So far your transactions are </p>
+    <table border=1>
+        <tr>
+            <th>Email Address</th>
+            <th>Address Contract</th>
+            <th>Dollar Value</th>
+            <th>Submitted At</th>
+        </tr>
+        {{#each trxlog}}
+        <tr>
+            <td>{{email_address}}</td>
+            <td>{{address_contract}}</td>
+            <td>{{dollar_value}}</td>
+            <td>{{submitted_at}}</td>
+        </tr>
+        {{/each}}
+    </table>
 
   </body>
 </html>

@@ -44,6 +44,11 @@ app.use(session({
   }
 }));
 
+app.get('/status',(req,resp,next)=> {
+
+  resp.send(populateviewobject.viewobject);
+
+});
 
 
 app.get('/signup',(req,resp,next)=> {
@@ -228,14 +233,29 @@ app.post('/splitwise', authenticate , (req,resp,next)=> {
     }
   });
   //resp.sendFile(__dirname + '/publichtml/splitwise.html');
-  resp.render('home', {
+  databaseoperations.usertransactionlog(database.con,req.session.user,(err,result)=>{
 
-    contract_balance: populateviewobject.viewobject.contract_balance,
-    did_i_withdraw : populateviewobject.viewobject.did_i_withdraw,
-    am_i_funded: populateviewobject.viewobject.am_i_funded,
-    total_amount_collected: populateviewobject.viewobject.total_amount_collected,
-    number_of_parti : populateviewobject.viewobject.number_of_parti
+     if (err){
+         console.log('error in fetcjing transaction log');
+         
+     }
+     else{
+       console.log('transaction log of user ' + JSON.stringify({"label":result}));
+
+       resp.render('home', {
+
+        contract_balance: populateviewobject.viewobject.contract_balance,
+        did_i_withdraw : populateviewobject.viewobject.did_i_withdraw,
+        am_i_funded: populateviewobject.viewobject.am_i_funded,
+        total_amount_collected: populateviewobject.viewobject.total_amount_collected,
+        number_of_parti : populateviewobject.viewobject.number_of_parti,
+        trxlog : {"trxlog":result}.trxlog
+      });
+       
+     }
+
   });
+  
   }
 });
 
